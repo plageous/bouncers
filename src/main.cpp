@@ -25,9 +25,30 @@ class Bouncer {
         bn::sprite_ptr sprite = bn::sprite_items::dot.create_sprite();
         bn::fixed x_speed = BASE_SPEED;
 
+        void update() {
+            bn::fixed x = sprite.x();
+
+            // Update x position by adding speed
+            x += x_speed;
+
+            // If we've gone off the screen on the right
+            if(x > MAX_X) {
+                // Snap back to screen and reverse direction
+                x = MAX_X;
+                x_speed *=-1;
+            }
+            // If we've gone off the screen on the left
+            if(x < MIN_X) {
+                // Snap back to screen and reverse direction
+                x = MIN_X;
+                x_speed *= -1;
+        }
+
+        sprite.set_x(x);
+    }
 };
 
-bn::fixed average_x (bn::vector<Bouncer, MAX_BOUNCERS>& bouncers) {
+bn::fixed average_x(bn::vector<Bouncer, MAX_BOUNCERS>& bouncers) {
 // Add all x positions together
     bn::fixed x_sum = 0;
     for(Bouncer bouncer : bouncers) {
@@ -54,39 +75,15 @@ void add_bouncer(bn::vector<Bouncer, MAX_BOUNCERS>& bouncers) {
 
 int main() {
     bn::core::init();
-
-    Bouncer bouncer = Bouncer();
+    
     bn::vector<Bouncer, MAX_BOUNCERS> bouncers = {};
 
     while(true) {
         if (bn::keypad::a_pressed()) { add_bouncer(bouncers); }
-        if (bn::keypad::b_pressed()) { BN_LOG("Average x: ", average_x(bouncers)); }
+        if (bn::keypad::b_pressed()) { /* BN_LOG("Average x: ", average_x(bouncers)); */ }
 
         // for each bouncer
-        for (int i = 0; i < bouncers.size(); i++) {
-            Bouncer& bouncer = bouncers[i];
-            bn::sprite_ptr sprite = bouncer.sprite;
-
-            bn::fixed x = sprite.x();
-
-            // Update x position by adding speed
-            x += bouncer.x_speed;
-
-            // If we've gone off the screen on the right
-            if(x > MAX_X) {
-                // Snap back to screen and reverse direction
-                x = MAX_X;
-                bouncer.x_speed *=-1;
-            }
-            // If we've gone off the screen on the left
-            if(x < MIN_X) {
-                // Snap back to screen and reverse direction
-                x = MIN_X;
-                bouncer.x_speed *= -1;
-            }
-
-            sprite.set_x(x);
-        }
+        for (Bouncer& bouncer : bouncers) { bouncer.update(); }
 
         bn::core::update();
     }
