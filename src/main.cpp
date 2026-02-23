@@ -28,8 +28,8 @@ public:
     bn::fixed x_speed = rng.get_fixed(-5, 5);
     bn::fixed y_speed = rng.get_fixed(-5, 5);
 
-    void update()
-    {
+    // default constructor
+    void update() {
         bn::fixed x = sprite.x();
         bn::fixed y = sprite.y();
 
@@ -65,10 +65,15 @@ public:
         sprite.set_x(x);
         sprite.set_y(y);
     }
+
+    // override for average dot
+    void update(bn::fixed x_average, bn::fixed y_average) {   
+        sprite.set_x(x_average);
+        sprite.set_y(y_average);
+    }
 };
 
-bn::fixed average_x(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
-{
+bn::fixed average_x_speed(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers) {
     // Add all x positions together
     bn::fixed x_sum = 0;
     for (Bouncer bouncer : bouncers)
@@ -85,11 +90,67 @@ bn::fixed average_x(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
         x_average /= bouncers.size();
     }
 
-    return x_sum;
+    return x_average;
 }
 
-void add_bouncer(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
-{
+// returns average y speed of all bouncers
+bn::fixed average_y_speed(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers) {
+    // Add all x positions together
+    bn::fixed y_sum = 0;
+    for (Bouncer bouncer : bouncers)
+    {
+        y_sum += bouncer.y_speed;
+    }
+
+    bn::fixed y_average = y_sum;
+
+    // Only divide if we have 1 or more
+    // Prevents division by 0
+    if (bouncers.size() > 0)
+    {
+        y_average /= bouncers.size();
+    }
+
+    return y_average;
+}
+
+bn::fixed average_x_pos(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers) {
+    // Add all x positions together
+    bn::fixed x_sum = 0;
+    for (int i = 1; i < bouncers.size(); i++)
+    {
+        x_sum += bouncers[i].sprite.x();
+    }
+
+    bn::fixed x_average = x_sum;
+
+    // Prevents the average dot from being used in
+    // the average. Prevents division by 0.
+    if (bouncers.size() > 1) {
+        x_average /= (bouncers.size() - 1);
+    }
+    return x_average;
+}
+
+bn::fixed average_y_pos(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers) {
+    // Add all x positions together
+    bn::fixed y_sum = 0;
+    for (int i = 1; i < bouncers.size(); i++)
+    {
+        y_sum += bouncers[i].sprite.y();
+    }
+
+    bn::fixed y_average = y_sum;
+
+    // Prevents the average dot from being used in
+    // the average. Prevents division by 0.
+    if (bouncers.size() > 1) {
+        y_average /= (bouncers.size() - 1);
+    }
+    return y_average;
+}
+
+void add_bouncer(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers) {
     rng.update();
     // Only add if we're below the maximum
     if (bouncers.size() < bouncers.max_size())
@@ -100,8 +161,10 @@ void add_bouncer(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
 
 int main() {
     bn::core::init();
-
     bn::vector<Bouncer, MAX_BOUNCERS> bouncers = {};
+
+    // add an initial bouncer for the average bouncer
+    add_bouncer(bouncers);
 
     while (true)
     {
@@ -109,13 +172,16 @@ int main() {
             add_bouncer(bouncers);
         }
         if (bn::keypad::b_pressed()) {
-            BN_LOG("Average x: ", average_x(bouncers));
+            BN_LOG("Average x: ", average_x_speed(bouncers));
         }
 
         // for each bouncer
         for (Bouncer &bouncer : bouncers) {
             bouncer.update();
         }
+
+        // update the average bouncer
+        bouncers[0].update(average_x_pos(bouncers), average_y_pos(bouncers));
 
         bn::core::update();
     }
