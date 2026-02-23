@@ -17,18 +17,16 @@ static constexpr bn::fixed MAX_X = HALF_SCREEN_WIDTH;
 static constexpr bn::fixed MIN_Y = -HALF_SCREEN_HEIGHT;
 static constexpr bn::fixed MAX_Y = HALF_SCREEN_HEIGHT;
 
-// Starting speed of a bouncer
-static constexpr bn::fixed BASE_SPEED = 2;
-
 // Maximum number of bouncers on screen at once
 static constexpr int MAX_BOUNCERS = 20;
+static bn::random rng = bn::random();
 
 class Bouncer
 {
 public:
     bn::sprite_ptr sprite = bn::sprite_items::dot.create_sprite();
-    bn::fixed x_speed = BASE_SPEED;
-    bn::fixed y_speed = 1;
+    bn::fixed x_speed = rng.get_fixed(-5, 5);
+    bn::fixed y_speed = rng.get_fixed(-5, 5);
 
     void update()
     {
@@ -92,6 +90,7 @@ bn::fixed average_x(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
 
 void add_bouncer(bn::vector<Bouncer, MAX_BOUNCERS> &bouncers)
 {
+    rng.update();
     // Only add if we're below the maximum
     if (bouncers.size() < bouncers.max_size())
     {
